@@ -1,21 +1,19 @@
 # Kafka Test Client in C# for Confluent Cloud on Azure
 
-This is a C# console application that demonstrates how to interact with Confluent Cloud on Azure using Azure managed identity for authentication. The application can run as either a producer or a consumer.
+This is a C# console application that demonstrates how to interact with Confluent Cloud on Azure. The application supports two authentication methods:
+
+1. **Azure Managed Identity** (preferred): Uses OAuth with Azure Managed Identity for seamless authentication
+2. **API Key Authentication** (fallback): Uses Confluent Cloud API keys when OAuth is not available
+
+The application can run as either a producer or a consumer.
 
 ## Prerequisites
 
 - [.NET SDK](https://dotnet.microsoft.com/download) (version 9.0 or later)
 - A Confluent Cloud cluster on Azure
-- Azure subscription with managed identity configured
-
-## Setting Up with Confluent Cloud on Azure
-
-1. Create a Confluent Cloud cluster on Azure following [Confluent's documentation](https://docs.confluent.io/cloud/current/azure/index.html).
-
-2. Configure Azure managed identity for your application by following these steps:
-   - Create a managed identity in Azure
-   - Assign appropriate permissions to access your Confluent Cloud resources
-   - Set up OAuth integration between Azure AD and Confluent Cloud
+- One of the following authentication methods:
+  - Azure subscription with managed identity configured
+  - Confluent Cloud API key and secret
 
 ## Configuration
 
@@ -25,7 +23,6 @@ The application configuration is now hard-coded in the Program.cs file. The key 
 // Hard-coded configuration values
 private static string BootstrapServers = "pkc-w77k7w.centralus.azure.confluent.cloud:9092";
 private static string Topic = "test-topic";
-private static string ClientId = "your-client-id"; 
 private static string Scope = "51ba109f-c8e0-4a62-96dd-64ad6abc1453";
 private static string LogicalClusterId = "lkc-abc123";
 private static string IdentityPoolId = "pool-xyz456";
@@ -64,49 +61,27 @@ dotnet run
 
 This project includes scripts to deploy the application to an Azure VM with managed identity:
 
-#### Windows VM Deployment
-
-1. Build the self-contained application for Windows:
-
-```powershell
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true
-```
-
-2. Use the provided deployment scripts:
-
-```powershell
-# Deploy a new Windows VM with managed identity
-.\Deploy-KafkaVM.ps1 -ResourceGroupName "your-resource-group" -Location "westus2"
-
-# Deploy the application to the VM
-.\Deploy-To-AzureVM.ps1 -VmName "kafka-client-vm" -ResourceGroup "your-resource-group"
-
-# Or use the full deployment script
-.\Deploy-Full-Solution.ps1 -ResourceGroupName "your-resource-group"
-```
-
-#### Linux VM Deployment
-
 1. Build the self-contained application for Linux:
 
 ```powershell
-dotnet publish -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=true
+dotnet publish -c Release -r linux-x64 --self-contained
 ```
 
-2. Use the provided Linux deployment scripts:
+2. Zip the [publish](.\bin\Release\net9.0\linux-x64\publish) and copy it into your vm:
 
 ```powershell
-# Deploy a new Linux VM with managed identity
-.\Deploy-KafkaLinuxVM.ps1 -ResourceGroupName "your-resource-group" -Location "westus2"
-
-# Deploy the application to the VM
-.\Deploy-To-LinuxVM.ps1 -VmName "kafka-client-linux-vm" -ResourceGroup "your-resource-group"
-
-# Or use the full Linux deployment script
-.\Deploy-Full-Linux-Solution.ps1 -ResourceGroupName "your-resource-group"
+scp -i C:\Users\yiliu6\.ssh\id_rsa_new  .\bin\Release\net9.0\linux-x64\publish.zip azureuser@48.217.64.247:/tmp/KafkaTestC
 ```
 
-Refer to the `DEPLOYMENT.md` file for detailed deployment instructions.
+3. Unzip it in vm and add exec permission to the application assemble, then run it:
+
+```bash
+sudo mv /tmp/KafkaTestC/publish.zip /opt/KafkaTestC/
+cd /opt/KafkaTestC
+sudo unzip publish.zip
+sudo chmod +x publish/KafkaTestC
+./publish/KafkaTestC
+```
 
 ## As a Producer
 
@@ -117,14 +92,6 @@ Refer to the `DEPLOYMENT.md` file for detailed deployment instructions.
 
 - The consumer will automatically start reading messages from the topic
 - Press `Ctrl+C` to exit
-
-## Additional Settings
-
-You can modify the following settings in your `appsettings.json` file:
-
-- `Topic`: Topic name (default: "test-topic")
-- `GroupId`: Consumer group ID (default: "kafka-test-consumer-group")
-- Other security and authentication settings as needed
 
 ## Testing the Application
 
