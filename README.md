@@ -1,45 +1,57 @@
-# Kafka Test Client in C# for Confluent Cloud on Azure
+# Kafka Test Client in C#
 
-This is a C# console application that demonstrates how to interact with Confluent Cloud on Azure. The application supports two authentication methods:
-
-1. **Azure Managed Identity** (preferred): Uses OAuth with Azure Managed Identity for seamless authentication
-2. **API Key Authentication** (fallback): Uses Confluent Cloud API keys when OAuth is not available
-
-The application can run as either a producer or a consumer.
+This is a C# console application that demonstrates how to interact with Apache Kafka using the Confluent.Kafka client library. The application is configured to connect to a local Kafka broker running in Docker and can run as either a producer or a consumer.
 
 ## Prerequisites
 
 - [.NET SDK](https://dotnet.microsoft.com/download) (version 9.0 or later)
-- A Confluent Cloud cluster on Azure
-- One of the following authentication methods:
-  - Azure subscription with managed identity configured
-  - Confluent Cloud API key and secret
+- Docker and Docker Compose for running Kafka locally
+- VS Code (optional, but recommended)
+
+## Project Structure
+
+- `Program.cs` - Main application code with both producer and consumer functionality
+- `docker-compose.yml` - Configuration for local Kafka setup with Docker
 
 ## Configuration
 
-The application configuration is now hard-coded in the Program.cs file. The key settings are:
+The application is configured to connect to a local Kafka broker running on `localhost:9092`. The key settings are defined in Program.cs:
 
 ```csharp
-// Hard-coded configuration values
-private static string BootstrapServers = "pkc-w77k7w.centralus.azure.confluent.cloud:9092";
+// Configuration for local Kafka broker
+private static string BootstrapServers = "localhost:9092";
 private static string Topic = "test-topic";
-private static string Scope = "51ba109f-c8e0-4a62-96dd-64ad6abc1453";
-private static string LogicalClusterId = "lkc-abc123";
-private static string IdentityPoolId = "pool-xyz456";
 ```
 
-Update these values in Program.cs to match your specific Confluent Cloud and Azure environment.
+You can modify these values in Program.cs if needed.
+
+## Running Kafka locally with Docker
+
+1. Start the Kafka and Zookeeper containers:
+
+```bash
+# If using VS Code, run the task "start-kafka"
+# Otherwise, use:
+docker-compose up -d
 ```
 
-Where:
-- `<YOUR_CONFLUENT_CLOUD_BOOTSTRAP_SERVERS>`: The bootstrap servers URL from your Confluent Cloud cluster
-- `<YOUR_AZURE_CLIENT_ID>`: The client ID of your Azure managed identity
-- `<YOUR_AZURE_TENANT_ID>`: Your Azure tenant ID
-- `<YOUR_CONFLUENT_CLOUD_SCOPE>`: The scope required for Confluent Cloud OAuth authentication
+2. To stop the containers:
+
+```bash
+# If using VS Code, run the task "stop-kafka"
+# Otherwise, use:
+docker-compose down
+```
 
 ## Building and Running the Application
 
-### Local Development Environment
+### Using VS Code Tasks
+
+1. Start Kafka: Run the `start-kafka` task
+2. Build the application: Run the `build` task
+3. Run the application: Run the `run` task
+
+### Using Terminal Commands
 
 1. Build the application:
 
@@ -57,32 +69,6 @@ dotnet run
    - `1` to run as a Producer
    - `2` to run as a Consumer
 
-### Deploying to Azure VM
-
-This project includes scripts to deploy the application to an Azure VM with managed identity:
-
-1. Build the self-contained application for Linux:
-
-```powershell
-dotnet publish -c Release -r linux-x64 --self-contained
-```
-
-2. Zip the [publish](.\bin\Release\net9.0\linux-x64\publish) and copy it into your vm:
-
-```powershell
-scp -i C:\Users\yiliu6\.ssh\id_rsa_new  .\bin\Release\net9.0\linux-x64\publish.zip azureuser@48.217.64.247:/tmp/KafkaTestC
-```
-
-3. Unzip it in vm and add exec permission to the application assemble, then run it:
-
-```bash
-sudo mv /tmp/KafkaTestC/publish.zip /opt/KafkaTestC/
-cd /opt/KafkaTestC
-sudo unzip publish.zip
-sudo chmod +x publish/KafkaTestC
-./publish/KafkaTestC
-```
-
 ## As a Producer
 
 - Enter messages when prompted
@@ -95,15 +81,22 @@ sudo chmod +x publish/KafkaTestC
 
 ## Testing the Application
 
-1. Make sure your Confluent Cloud cluster on Azure is running and properly configured
+1. Make sure your local Kafka broker is running (check with `docker ps`)
 2. Run two instances of the application:
    - One as a Producer (Option 1)
    - One as a Consumer (Option 2)
 3. Send messages from the Producer and observe them being received by the Consumer
 
+## Technical Details
+
+- Uses Confluent.Kafka client library for Kafka interaction
+- Supports both producer and consumer roles
+- Works with a locally running Kafka instance (default: localhost:9092)
+- Default topic: "test-topic"
+- Automatically creates topics if they don't exist
+
 ## Additional Resources
 
 - [Confluent Kafka .NET Client Documentation](https://docs.confluent.io/clients-confluent-kafka-dotnet/current/overview.html)
-- [Azure Managed Identity Documentation](https://docs.microsoft.com/en-us/azure/active-directory/managed-identities-azure-resources/overview)
-- [Confluent Cloud on Azure Documentation](https://docs.confluent.io/cloud/current/azure/index.html)
-- [OAuth Authentication for Kafka](https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_oauth.html)
+- [Apache Kafka Documentation](https://kafka.apache.org/documentation/)
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
