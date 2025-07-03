@@ -13,25 +13,6 @@
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.14.1" />
     <PackageReference Include="Confluent.Kafka" Version="2.10.1" />
-    <PackageReference Include="librdkafka.redist" Version="2.10.1" />
-  </ItemGroup>
-
-  <!-- Copy native libraries to output directory -->
-  <Target Name="CopyNativeLibraries" AfterTargets="Publish">
-    <ItemGroup>
-      <NativeLibs Include="$(NugetPackageRoot)librdkafka.redist\2.10.1\runtimes\linux-x64\native\*.*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(NativeLibs)" DestinationFolder="$(PublishDir)" />
-    <Copy SourceFiles="@(NativeLibs)" DestinationFolder="$(PublishDir)\runtimes\linux-x64\native" />
-    <Copy SourceFiles="@(NativeLibs)" DestinationFolder="$(PublishDir)\librdkafka\linux-x64" />
-  </Target>
-
-  <!-- Include native libraries directly in the package -->
-  <ItemGroup>
-    <Content Include="$(NugetPackageRoot)librdkafka.redist\2.10.1\runtimes\linux-x64\native\*.*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>librdkafka\linux-x64\%(Filename)%(Extension)</Link>
-    </Content>
   </ItemGroup>
 
 </Project>
